@@ -1,12 +1,20 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class AddPage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class AddPage extends StatefulWidget {
   const AddPage({super.key});
 
   @override
+  State<AddPage> createState() => _AddPageState();
+}
+
+class _AddPageState extends State<AddPage> {
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  @override
   Widget build(BuildContext context) {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController descriptionController = TextEditingController();
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -57,7 +65,9 @@ class AddPage extends StatelessWidget {
               backgroundColor: Colors.grey[700],
               foregroundColor: Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () {
+              submitData();
+            },
             child: const Text('Submit'),
           ),
         ],
@@ -65,5 +75,41 @@ class AddPage extends StatelessWidget {
     );
   }
 
-  void submitData() {}
+  Future<void> submitData() async {
+    // get the data from the text fields
+    final title = titleController.text;
+    final description = descriptionController.text;
+    final body = {
+      "title": title,
+      "description": description,
+      "is_completed": false,
+    };
+    // Submit the data from the server
+    const url = 'https://api.nstack.in/v1/todos';
+    final uri = Uri.parse(url);
+    final response = await http.post(
+      uri,
+      body: jsonEncode(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+    // show success or failure message to the user
+    if (response.statusCode == 201) {
+      titleController.text = '';
+      descriptionController.text = '';
+      showMessage('The todo added successfully');
+    } else {
+      showMessage('An error happened, please try again later!');
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
 }
