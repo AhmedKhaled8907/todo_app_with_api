@@ -27,7 +27,10 @@ class _TodoListState extends State<TodoList> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Todo App'),
+        title: const Text(
+          'Todo List',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Visibility(
         visible: !isLoading,
@@ -51,7 +54,7 @@ class _TodoListState extends State<TodoList> {
                 trailing: PopupMenuButton(
                   onSelected: (value) {
                     if (value == 'edit') {
-                      // open edit page
+                      navigateToEditPage(item);
                     }
                     if (value == 'delete') {
                       // delete and remove the item from the UI
@@ -82,12 +85,28 @@ class _TodoListState extends State<TodoList> {
     );
   }
 
-  void navigateToAddPage() {
-    Navigator.of(context).push(
+  void navigateToEditPage(Map item) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddPage(todo: item),
+      ),
+    );
+    setState(() {
+      isLoading = true;
+    });
+    fetchTodo();
+  }
+
+  Future<void> navigateToAddPage() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const AddPage(),
       ),
     );
+    setState(() {
+      isLoading = true;
+    });
+    fetchTodo();
   }
 
   Future<void> fetchTodo() async {

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class AddPage extends StatefulWidget {
-  const AddPage({super.key});
+  const AddPage({super.key, this.todo});
+  final Map? todo;
 
   @override
   State<AddPage> createState() => _AddPageState();
@@ -13,12 +14,25 @@ class AddPage extends StatefulWidget {
 class _AddPageState extends State<AddPage> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  bool isEdit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final todo = widget.todo;
+    if (todo != null) {
+      isEdit = true;
+      titleController.text = todo['title'];
+      descriptionController.text = todo['description'];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Add Todo'),
+        title: isEdit ? const Text('Edit Todo') : const Text('Add Todo'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(8).copyWith(top: 16),
@@ -64,15 +78,49 @@ class _AddPageState extends State<AddPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey[700],
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-            onPressed: () {
-              submitData();
-            },
-            child: const Text('Submit'),
+            onPressed: isEdit ? updateData : submitData,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(isEdit ? 'Update' : 'Submit'),
+            ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> updateData() async {
+    final todo = widget.todo;
+    if (todo == null) {
+      return;
+    }
+    // get the data from the text fields
+    final id = todo['_id'];
+    final title = titleController.text;
+    final description = descriptionController.text;
+    final body = {
+      "title": title,
+      "description": description,
+      "is_completed": false,
+    };
+    // Submit updated data to the server
+    final url = 'https://api.nstack.in/v1/todos/$id';
+    final uri = Uri.parse(url);
+    final response = await http.put(
+      uri,
+      body: jsonEncode(body),
+      headers: {'Content-Type': 'application/json'},
+    );
+    // show success or failure message to the user
+    if (response.statusCode == 200) {
+      showSuccessMessage('The todo updated successfully');
+    } else {
+      showFailureMessage('An error happened, please try again later!');
+    }
   }
 
   Future<void> submitData() async {
