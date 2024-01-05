@@ -98,17 +98,32 @@ class _AddPageState extends State<AddPage> {
     if (response.statusCode == 201) {
       titleController.text = '';
       descriptionController.text = '';
-      showMessage('The todo added successfully');
+      showSuccessMessage('The todo added successfully');
     } else {
-      showMessage('An error happened, please try again later!');
+      showFailureMessage('An error happened, please try again later!');
     }
   }
 
-  void showMessage(String message) {
+  void showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
+      ),
+    );
+  }
+
+  void showFailureMessage(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red,
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
