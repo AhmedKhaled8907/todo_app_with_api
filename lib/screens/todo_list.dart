@@ -24,6 +24,63 @@ class _TodoListState extends State<TodoList> {
 
   @override
   Widget build(BuildContext context) {
+    Widget content = Visibility(
+      visible: !isLoading,
+      replacement: const Center(
+        child: CircularProgressIndicator(),
+      ),
+      child: RefreshIndicator(
+        onRefresh: fetchTodo,
+        child: ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (BuildContext context, int index) {
+            final item = items[index] as Map;
+            final id = item['_id'];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundColor: Colors.black,
+                child: Text('${index + 1}'),
+              ),
+              title: Text(item['title']),
+              subtitle: Text(item['description']),
+              trailing: PopupMenuButton(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    navigateToEditPage(item);
+                  }
+                  if (value == 'delete') {
+                    // delete and remove the item from the UI
+                    deleteByID(id);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Text('Edit'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Text('Delete'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    if (items.isEmpty) {
+      content = const Center(
+        child: Text(
+          'No items added yet,Try add some!',
+          style: TextStyle(
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -32,51 +89,7 @@ class _TodoListState extends State<TodoList> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: Visibility(
-        visible: !isLoading,
-        replacement: const Center(
-          child: CircularProgressIndicator(),
-        ),
-        child: RefreshIndicator(
-          onRefresh: fetchTodo,
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (BuildContext context, int index) {
-              final item = items[index] as Map;
-              final id = item['_id'];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.black,
-                  child: Text('${index + 1}'),
-                ),
-                title: Text(item['title']),
-                subtitle: Text(item['description']),
-                trailing: PopupMenuButton(
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      navigateToEditPage(item);
-                    }
-                    if (value == 'delete') {
-                      // delete and remove the item from the UI
-                      deleteByID(id);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Edit'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Delete'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ),
+      body: content,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.grey[700],
         onPressed: navigateToAddPage,
